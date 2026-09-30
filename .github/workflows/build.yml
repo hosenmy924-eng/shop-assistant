@@ -18,32 +18,30 @@ jobs:
         java-version: '17'
         distribution: 'temurin'
 
-    - name: Extract Project and Build
+    - name: Extract and Build Project
       run: |
-        echo "=== Listing Root Directory ==="
-        ls -la
-        
         if [ -f "shop_assistant_full_v0_1.zip" ]; then
-          echo "Found ZIP file, extracting..."
+          echo "Extracting ZIP..."
           unzip -q shop_assistant_full_v0_1.zip -d project_extracted
-        else
-          echo "ZIP file not found in root, searching..."
-          ZIP_FILE=$(find . -name "shop_assistant_full_v0_1.zip" | head -n 1)
-          if [ -n "$ZIP_FILE" ]; then
-            unzip -q "$ZIP_FILE" -d project_extracted
-          fi
         fi
         
-        # البحث عن مجلد المشروع أو ملف gradlew
-        GRADLEW_PATH=$(find . -name "gradlew" | head -n 1)
-        if [ -n "$GRADLEW_PATH" ]; then
-          echo "Found gradlew at: $GRADLEW_PATH"
-          DIR=$(dirname "$GRADLEW_PATH")
-          cd "$DIR"
+        echo "Searching for build.gradle..."
+        BUILD_GRADLE=$(find project_extracted -name "build.gradle" | head -n 1)
+        
+        if [ -n "$BUILD_GRADLE" ]; then
+          PROJECT_DIR=$(dirname "$BUILD_GRADLE")
+          cd "$PROJECT_DIR"
+          echo "Found project directory at: $PROJECT_DIR"
+          
+          if [ ! -f "gradlew" ]; then
+            echo "Generating Gradle wrapper..."
+            gradle wrapper
+          fi
+          
           chmod +x gradlew
           ./gradlew assembleDebug
         else
-          echo "ERROR: Gradle wrapper not found anywhere!"
+          echo "ERROR: build.gradle not found anywhere in the extracted files!"
           exit 1
         fi
 
