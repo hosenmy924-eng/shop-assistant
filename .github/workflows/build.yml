@@ -12,36 +12,34 @@ jobs:
     - name: Checkout Code
       uses: actions/checkout@v4
 
-    - name: Set up JDK 17
+    - name: Set up Java
       uses: actions/setup-java@v4
       with:
         java-version: '17'
         distribution: 'temurin'
 
-    - name: Extract and Build Project
+    - name: Set up Flutter
+      uses: subosito/flutter-action@v2
+      with:
+        flutter-version: '3.19.6'
+        channel: 'stable'
+
+    - name: Extract and Build
       run: |
         if [ -f "shop_assistant_full_v0_1.zip" ]; then
           echo "Extracting ZIP..."
           unzip -q shop_assistant_full_v0_1.zip -d project_extracted
         fi
         
-        echo "Searching for build.gradle..."
-        BUILD_GRADLE=$(find project_extracted -name "build.gradle" | head -n 1)
-        
-        if [ -n "$BUILD_GRADLE" ]; then
-          PROJECT_DIR=$(dirname "$BUILD_GRADLE")
+        PUBSPEC_PATH=$(find project_extracted -name "pubspec.yaml" | head -n 1)
+        if [ -n "$PUBSPEC_PATH" ]; then
+          PROJECT_DIR=$(dirname "$PUBSPEC_PATH")
           cd "$PROJECT_DIR"
-          echo "Found project directory at: $PROJECT_DIR"
-          
-          if [ ! -f "gradlew" ]; then
-            echo "Generating Gradle wrapper..."
-            gradle wrapper
-          fi
-          
-          chmod +x gradlew
-          ./gradlew assembleDebug
+          echo "Found Flutter project at: $(pwd)"
+          flutter pub get
+          flutter build apk --debug
         else
-          echo "ERROR: build.gradle not found anywhere in the extracted files!"
+          echo "ERROR: pubspec.yaml not found!"
           exit 1
         fi
 
@@ -49,5 +47,4 @@ jobs:
       uses: actions/upload-artifact@v4
       with:
         name: app-debug
-        path: '**/app/build/outputs/apk/debug/app-debug.apk'
-        
+        path: '**/build/app/outputs/flutter-apk/app-debug.apk'
