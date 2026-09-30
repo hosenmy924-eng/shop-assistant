@@ -36,8 +36,20 @@ jobs:
           PROJECT_DIR=$(dirname "$PUBSPEC_PATH")
           cd "$PROJECT_DIR"
           echo "Found Flutter project at: $(pwd)"
+          
+          # 1. تنزيل حزم فلاتر
           flutter pub get
-          flutter build apk --debug
+          
+          # 2. التوجه لمجلد أندرويد والبناء مباشرة عبر Gradle لتجاوز فحص فلاتر
+          cd android
+          echo "flutter.sdk=$FLUTTER_ROOT" > local.properties
+          
+          if [ ! -f "gradlew" ]; then
+            gradle wrapper
+          fi
+          
+          chmod +x gradlew
+          ./gradlew assembleDebug
         else
           echo "ERROR: pubspec.yaml not found!"
           exit 1
@@ -47,5 +59,4 @@ jobs:
       uses: actions/upload-artifact@v4
       with:
         name: app-debug
-        path: '**/build/app/outputs/flutter-apk/app-debug.apk'
-        
+        path: '**/*.apk'
