@@ -18,18 +18,27 @@ jobs:
         java-version: '17'
         distribution: 'temurin'
 
-    - name: Build with Gradle
+    - name: Extract Project and Build
       run: |
-        if [ -f "gradlew" ]; then
+        if [ -f "shop_assistant_full_v0_1.zip" ]; then
+          unzip shop_assistant_full_v0_1.zip -d project_extracted
+          cd project_extracted
+        fi
+        
+        # البحث عن ملف التشغيل وبناء التطبيق
+        GRADLEW_PATH=$(find . -name "gradlew" | head -n 1)
+        if [ -n "$GRADLEW_PATH" ]; then
+          DIR=$(dirname "$GRADLEW_PATH")
+          cd "$DIR"
           chmod +x gradlew
           ./gradlew assembleDebug
         else
           echo "Gradle wrapper not found"
+          exit 1
         fi
 
     - name: Upload APK Artifact
       uses: actions/upload-artifact@v4
       with:
         name: app-debug
-        path: app/build/outputs/apk/debug/app-debug.apk
-        
+        path: '**/app/build/outputs/apk/debug/app-debug.apk'
