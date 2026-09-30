@@ -37,9 +37,10 @@ jobs:
           cd "$PROJECT_DIR"
           echo "Found Flutter project at: $(pwd)"
           
-          # تحديث هيكلية المشروع تلقائياً لتتوافق مع فلاتر الحديث
-          flutter create . --platforms=android
+          # حذف مجلد الأندرويد القديم لتجنب تعارض الإصدارات وتوليد هيكلية جديدة متوافقة
+          rm -rf android
           
+          flutter create . --platforms=android
           flutter pub get
           flutter build apk --debug
         else
@@ -52,4 +53,3 @@ jobs:
       with:
         name: app-debug
         path: '**/build/app/outputs/flutter-apk/app-debug.apk'
-        
